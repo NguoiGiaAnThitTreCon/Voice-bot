@@ -4,12 +4,19 @@ from gtts import gTTS
 import asyncio
 import os
 import time
+import platform
 from keep_alive import keep_alive
+
 # ================= CONFIG =================
 TOKEN = os.getenv("DISCORD_TOKEN")
 PREFIX = "!"
-FFMPEG_PATH = "bin/ffmpeg.exe"  # Đường dẫn tới ffmpeg.exe
 SPAM_DELAY = 1  # Thời gian tối thiểu giữa 2 lần !talk
+
+# Tự phát hiện đường dẫn FFMPEG
+if platform.system() == "Windows":
+    FFMPEG_PATH = os.path.join(os.path.dirname(__file__), "bin", "ffmpeg.exe")
+else:
+    FFMPEG_PATH = "ffmpeg"  # Linux (Render) sẽ dùng ffmpeg cài sẵn
 # ===========================================
 
 intents = discord.Intents.default()
@@ -48,8 +55,8 @@ async def talk(ctx, *, text: str):
         await ctx.voice_client.move_to(voice_channel)
 
     # Tạo file âm thanh từ văn bản
+    file_path = os.path.join(os.path.dirname(__file__), "tts.mp3")
     tts = gTTS(text=text, lang="vi")
-    file_path = "tts.mp3"
     tts.save(file_path)
 
     # Phát âm thanh
@@ -59,13 +66,11 @@ async def talk(ctx, *, text: str):
     vc.play(discord.FFmpegPCMAudio(executable=FFMPEG_PATH, source=file_path))
     await ctx.send(f"🗣️ Bot đang nói: **{text}**")
 
-
 @bot.command()
 async def leave(ctx):
     if ctx.voice_client is not None:
         await ctx.voice_client.disconnect()
         await ctx.send("👋 Bot đã rời voice channel.")
-
 
 keep_alive()
 bot.run(TOKEN)
