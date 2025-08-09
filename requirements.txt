@@ -1,0 +1,3 @@
+discord.py
+gTTS
+discord-ext-anti-spam
